@@ -1,0 +1,593 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Screenshot Editor</title>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+    
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      background: #f5f5f5;
+      padding: 20px;
+    }
+    
+    .container {
+      max-width: 1400px;
+      margin: 0 auto;
+      background: white;
+      border-radius: 8px;
+      box-shadow: 0 4px 20px rgba(0,0,0,0.1);
+      overflow: hidden;
+    }
+    
+    .header {
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      color: white;
+      padding: 20px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    
+    .header h1 {
+      font-size: 24px;
+    }
+    
+    .header-buttons {
+      display: flex;
+      gap: 10px;
+    }
+    
+    .header button {
+      padding: 10px 16px;
+      background: rgba(255,255,255,0.2);
+      color: white;
+      border: 1px solid rgba(255,255,255,0.3);
+      border-radius: 4px;
+      cursor: pointer;
+      font-weight: 600;
+      transition: all 0.3s;
+    }
+    
+    .header button:hover {
+      background: rgba(255,255,255,0.3);
+    }
+    
+    .toolbar {
+      display: flex;
+      gap: 10px;
+      flex-wrap: wrap;
+      padding: 15px;
+      background: #f9f9f9;
+      border-bottom: 1px solid #e0e0e0;
+      align-items: center;
+    }
+    
+    .tool-group {
+      display: flex;
+      gap: 5px;
+      align-items: center;
+    }
+    
+    .tool-group label {
+      font-size: 12px;
+      color: #666;
+      font-weight: 600;
+    }
+    
+    .tool-btn {
+      padding: 8px 12px;
+      border: 1px solid #ddd;
+      background: white;
+      border-radius: 4px;
+      cursor: pointer;
+      font-size: 12px;
+      font-weight: 600;
+      transition: all 0.2s;
+    }
+    
+    .tool-btn:hover {
+      background: #667eea;
+      color: white;
+      border-color: #667eea;
+    }
+    
+    .tool-btn.active {
+      background: #667eea;
+      color: white;
+      border-color: #667eea;
+    }
+    
+    input[type="color"] {
+      width: 40px;
+      height: 32px;
+      border: 1px solid #ddd;
+      border-radius: 4px;
+      cursor: pointer;
+    }
+    
+    input[type="range"] {
+      width: 100px;
+    }
+    
+    .content {
+      display: flex;
+      gap: 20px;
+      padding: 20px;
+      height: calc(100vh - 300px);
+    }
+    
+    .canvas-wrapper {
+      flex: 1;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      background: #fafafa;
+      border-radius: 4px;
+      padding: 20px;
+      overflow: auto;
+      border: 1px solid #e0e0e0;
+    }
+    
+    canvas {
+      border: 1px solid #ddd;
+      border-radius: 4px;
+      background: white;
+      cursor: crosshair;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+      max-width: 100%;
+      height: auto;
+    }
+    
+    .sidebar {
+      width: 300px;
+      background: #f9f9f9;
+      border-radius: 4px;
+      padding: 15px;
+      border: 1px solid #e0e0e0;
+      overflow-y: auto;
+    }
+    
+    .sidebar h3 {
+      font-size: 14px;
+      margin-bottom: 10px;
+      color: #333;
+    }
+    
+    .info-box {
+      background: white;
+      padding: 12px;
+      border-radius: 4px;
+      margin-bottom: 15px;
+      border-left: 4px solid #667eea;
+    }
+    
+    .info-box label {
+      font-size: 11px;
+      color: #999;
+      text-transform: uppercase;
+      display: block;
+      margin-bottom: 5px;
+    }
+    
+    .info-box p {
+      font-size: 12px;
+      color: #333;
+      word-break: break-all;
+      line-height: 1.4;
+    }
+    
+    .info-box a {
+      color: #667eea;
+      text-decoration: none;
+    }
+    
+    .info-box a:hover {
+      text-decoration: underline;
+    }
+    
+    .share-section {
+      margin-top: 15px;
+    }
+    
+    .share-section button {
+      width: 100%;
+      background: #4CAF50;
+      color: white;
+      border: none;
+      padding: 10px;
+      margin-bottom: 5px;
+      border-radius: 4px;
+      cursor: pointer;
+      font-weight: 600;
+    }
+    
+    .share-section button:hover {
+      background: #45a049;
+    }
+    
+    .share-link {
+      background: white;
+      padding: 8px;
+      border-radius: 4px;
+      font-size: 11px;
+      color: #667eea;
+      word-break: break-all;
+      border: 1px solid #e0e0e0;
+      margin-top: 5px;
+      display: none;
+    }
+    
+    .share-link.show {
+      display: block;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="header">
+      <h1>📝 Screenshot Editor</h1>
+      <div class="header-buttons">
+        <button onclick="downloadImage()">⬇️ Download</button>
+        <button onclick="goHome()">🏠 Home</button>
+      </div>
+    </div>
+    
+    <div class="toolbar">
+      <div class="tool-group">
+        <label>Tools:</label>
+        <button class="tool-btn active" data-tool="pointer">✋ Pointer</button>
+        <button class="tool-btn" data-tool="pen">✏️ Pen</button>
+        <button class="tool-btn" data-tool="highlight">🖍️ Highlight</button>
+        <button class="tool-btn" data-tool="arrow">➜ Arrow</button>
+        <button class="tool-btn" data-tool="circle">⭕ Circle</button>
+        <button class="tool-btn" data-tool="rectangle">▭ Rectangle</button>
+      </div>
+      
+      <div class="tool-group">
+        <label>Color:</label>
+        <input type="color" id="colorPicker" value="#FF0000">
+      </div>
+      
+      <div class="tool-group">
+        <label>Size:</label>
+        <input type="range" id="brushSize" min="1" max="20" value="3">
+      </div>
+      
+      <div class="tool-group">
+        <button class="tool-btn" onclick="clearAnnotations()">🗑️ Clear All</button>
+        <button class="tool-btn" onclick="undoAnnotation()">↶ Undo</button>
+      </div>
+    </div>
+    
+    <div class="content">
+      <div class="canvas-wrapper">
+        <canvas id="annotationCanvas"></canvas>
+      </div>
+      
+      <div class="sidebar">
+        <h3>📍 Source</h3>
+        <div class="info-box">
+          <label>Source URL</label>
+          <p id="sourceUrl">No source URL</p>
+        </div>
+        
+        <div class="share-section">
+          <button onclick="generateShareLink()">🔗 Get Share Link</button>
+          <div class="share-link" id="shareLink"></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    let canvas, ctx;
+    let currentTool = 'pointer';
+    let currentColor = '#FF0000';
+    let brushSize = 3;
+    let isDrawing = false;
+    let startX, startY;
+    let currentX, currentY;
+    let annotationHistory = [];
+    let baseImage = null;
+    let originalImageData = null;
+    let shapes = [];
+    let selectedShape = null;
+    let isMovingShape = false;
+
+    const params = new URLSearchParams(window.location.search);
+    const screenshotId = params.get('id');
+
+    document.addEventListener('DOMContentLoaded', () => {
+      canvas = document.getElementById('annotationCanvas');
+      ctx = canvas.getContext('2d');
+      
+      const screenshots = JSON.parse(localStorage.getItem('screenshots') || '[]');
+      const screenshot = screenshots.find(s => s.id === screenshotId);
+      
+      if (screenshot) {
+        const img = new Image();
+        img.onload = () => {
+          canvas.width = img.width;
+          canvas.height = img.height;
+          ctx.drawImage(img, 0, 0);
+          originalImageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
+          baseImage = canvas.toDataURL('image/png');
+        };
+        img.src = screenshot.image;
+        
+        const sourceUrlEl = document.getElementById('sourceUrl');
+        if (screenshot.sourceUrl) {
+          sourceUrlEl.innerHTML = '<a href="' + screenshot.sourceUrl + '" target="_blank">' + screenshot.sourceUrl + '</a>';
+        }
+      }
+      
+      document.querySelectorAll('.tool-btn').forEach(btn => {
+        btn.addEventListener('click', (e) => {
+          if (!e.target.dataset.tool) return;
+          document.querySelectorAll('.tool-btn[data-tool]').forEach(b => b.classList.remove('active'));
+          e.target.classList.add('active');
+          currentTool = e.target.dataset.tool;
+          
+          if (currentTool === 'pointer') {
+            canvas.style.cursor = 'default';
+          } else {
+            canvas.style.cursor = 'crosshair';
+          }
+        });
+      });
+      
+      document.getElementById('colorPicker').addEventListener('change', (e) => {
+        currentColor = e.target.value;
+      });
+      
+      document.getElementById('brushSize').addEventListener('change', (e) => {
+        brushSize = parseInt(e.target.value);
+      });
+      
+      canvas.addEventListener('mousedown', startDrawing);
+      canvas.addEventListener('mousemove', draw);
+      canvas.addEventListener('mouseup', stopDrawing);
+      canvas.addEventListener('mouseout', stopDrawing);
+    });
+
+    function getCanvasCoordinates(e) {
+      const rect = canvas.getBoundingClientRect();
+      const scaleX = canvas.width / rect.width;
+      const scaleY = canvas.height / rect.height;
+      return {
+        x: (e.clientX - rect.left) * scaleX,
+        y: (e.clientY - rect.top) * scaleY
+      };
+    }
+
+    function startDrawing(e) {
+      if (!baseImage) return;
+      
+      const coords = getCanvasCoordinates(e);
+      startX = coords.x;
+      startY = coords.y;
+      currentX = startX;
+      currentY = startY;
+      
+      if (currentTool === 'pointer') {
+        selectedShape = findShapeAtPoint(startX, startY);
+        if (selectedShape) {
+          isMovingShape = true;
+          selectedShape.dragOffsetX = startX - selectedShape.x;
+          selectedShape.dragOffsetY = startY - selectedShape.y;
+          return;
+        }
+      }
+      
+      isDrawing = true;
+      annotationHistory.push(canvas.toDataURL('image/png'));
+    }
+
+    function draw(e) {
+      if (!baseImage || !originalImageData) return;
+      
+      const coords = getCanvasCoordinates(e);
+      currentX = coords.x;
+      currentY = coords.y;
+      
+      if (isMovingShape && selectedShape) {
+        selectedShape.x = currentX - selectedShape.dragOffsetX;
+        selectedShape.y = currentY - selectedShape.dragOffsetY;
+        redrawAll();
+        return;
+      }
+      
+      if (!isDrawing || currentTool === 'pointer') return;
+      
+      redrawAll();
+      
+      ctx.strokeStyle = currentColor;
+      ctx.fillStyle = currentColor;
+      ctx.lineWidth = brushSize;
+      ctx.lineCap = 'round';
+      ctx.lineJoin = 'round';
+      
+      switch (currentTool) {
+        case 'pen':
+          ctx.beginPath();
+          ctx.moveTo(startX, startY);
+          ctx.lineTo(currentX, currentY);
+          ctx.stroke();
+          break;
+        
+        case 'highlight':
+          ctx.globalAlpha = 0.3;
+          ctx.fillRect(startX, startY, currentX - startX, currentY - startY);
+          ctx.globalAlpha = 1;
+          break;
+        
+        case 'arrow':
+          drawArrowShape(startX, startY, currentX, currentY, currentColor, brushSize);
+          break;
+        
+        case 'circle':
+          const radiusX = Math.abs(currentX - startX);
+          const radiusY = Math.abs(currentY - startY);
+          ctx.beginPath();
+          ctx.ellipse(startX, startY, radiusX, radiusY, 0, 0, 2 * Math.PI);
+          ctx.stroke();
+          break;
+        
+        case 'rectangle':
+          ctx.strokeRect(startX, startY, currentX - startX, currentY - startY);
+          break;
+      }
+    }
+
+    function stopDrawing() {
+      if (isMovingShape) {
+        isMovingShape = false;
+        selectedShape = null;
+        return;
+      }
+      
+      if (!isDrawing) return;
+      isDrawing = false;
+      
+      if (currentTool !== 'pointer') {
+        const shape = {
+          tool: currentTool,
+          x: startX,
+          y: startY,
+          endX: currentX,
+          endY: currentY,
+          color: currentColor,
+          size: brushSize,
+          id: Date.now() + Math.random()
+        };
+        shapes.push(shape);
+      }
+    }
+
+    function redrawAll() {
+      if (originalImageData) {
+        ctx.putImageData(originalImageData, 0, 0);
+      }
+      
+      shapes.forEach(shape => {
+        drawStoredShape(shape);
+      });
+    }
+
+    function drawStoredShape(shape) {
+      ctx.strokeStyle = shape.color;
+      ctx.fillStyle = shape.color;
+      ctx.lineWidth = shape.size;
+      ctx.lineCap = 'round';
+      ctx.lineJoin = 'round';
+      
+      switch (shape.tool) {
+        case 'pen':
+          ctx.beginPath();
+          ctx.moveTo(shape.x, shape.y);
+          ctx.lineTo(shape.endX, shape.endY);
+          ctx.stroke();
+          break;
+        
+        case 'arrow':
+          drawArrowShape(shape.x, shape.y, shape.endX, shape.endY, shape.color, shape.size);
+          break;
+        
+        case 'circle':
+          const radiusX = Math.abs(shape.endX - shape.x);
+          const radiusY = Math.abs(shape.endY - shape.y);
+          ctx.beginPath();
+          ctx.ellipse(shape.x, shape.y, radiusX, radiusY, 0, 0, 2 * Math.PI);
+          ctx.stroke();
+          break;
+        
+        case 'rectangle':
+          ctx.strokeRect(shape.x, shape.y, shape.endX - shape.x, shape.endY - shape.y);
+          break;
+        
+        case 'highlight':
+          ctx.globalAlpha = 0.3;
+          ctx.fillRect(shape.x, shape.y, shape.endX - shape.x, shape.endY - shape.y);
+          ctx.globalAlpha = 1;
+          break;
+      }
+    }
+
+    function drawArrowShape(fromX, fromY, toX, toY, color, size) {
+      const headlen = 15;
+      const angle = Math.atan2(toY - fromY, toX - fromX);
+      
+      ctx.strokeStyle = color;
+      ctx.fillStyle = color;
+      ctx.lineWidth = size;
+      
+      ctx.beginPath();
+      ctx.moveTo(fromX, fromY);
+      ctx.lineTo(toX, toY);
+      ctx.stroke();
+      
+      ctx.beginPath();
+      ctx.moveTo(toX, toY);
+      ctx.lineTo(toX - headlen * Math.cos(angle - Math.PI / 6), toY - headlen * Math.sin(angle - Math.PI / 6));
+      ctx.lineTo(toX - headlen * Math.cos(angle + Math.PI / 6), toY - headlen * Math.sin(angle + Math.PI / 6));
+      ctx.closePath();
+      ctx.fill();
+    }
+
+    function findShapeAtPoint(x, y) {
+      for (let i = shapes.length - 1; i >= 0; i--) {
+        const shape = shapes[i];
+        const minX = Math.min(shape.x, shape.endX);
+        const maxX = Math.max(shape.x, shape.endX);
+        const minY = Math.min(shape.y, shape.endY);
+        const maxY = Math.max(shape.y, shape.endY);
+        
+        const padding = 15;
+        if (x >= minX - padding && x <= maxX + padding && y >= minY - padding && y <= maxY + padding) {
+          return shape;
+        }
+      }
+      return null;
+    }
+
+    function clearAnnotations() {
+      if (confirm('Clear all annotations?')) {
+        if (originalImageData) {
+          ctx.putImageData(originalImageData, 0, 0);
+        }
+        annotationHistory = [];
+        shapes = [];
+      }
+    }
+
+    function undoAnnotation() {
+      if (shapes.length > 0) {
+        shapes.pop();
+        redrawAll();
+      } else if (annotationHistory.length > 0) {
+        const previousState = annotationHistory.pop();
+        const img = new Image();
+        img.onload = () => {
+          ctx.drawImage(img, 0, 0);
+          originalImageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
+        };
+        img.src = previousState;
+      }
+    }
+
+    function downloadImage() {
+      const link = document.createElement('a');
+      link.href = canvas.toDataURL('image/png');
+      link.download = 'annotated-screenshot-' + Date.now() + '.png';
+      link.click();
+    }
+
+    function generateShareLink() {
+      const share
